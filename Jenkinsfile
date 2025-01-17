@@ -15,18 +15,26 @@ node {
         }
 
         stage('Deliver') {
-            def volume = sh(script: 'pwd', returnStdout: true).trim() + '/sources:/src'
+            def workspace = sh(script: 'pwd', returnStdout: true).trim()
+            def volume = "${workspace}/sources:/src"
             def image = 'cdrx/pyinstaller-linux:python2'
             def buildDir = env.BUILD_ID
 
             dir(buildDir) {
                 unstash 'compiled-results'
-                sh "docker run --rm -v ${volume} ${image} pyinstaller -F add2vals.py"
+
+                // Ensure `add2vals.py` exists in the sources directory
+                sh "ls -l ${workspace}/sources"
+
+                // Run PyInstaller
+                sh "docker run --rm -v ${volume} ${image} pyinstaller -F /src/add2vals.py"
             }
 
+            // Archive the artifact
             archiveArtifacts artifacts: "${buildDir}/sources/dist/add2vals"
 
-            sh "docker run --rm -v ${volume} ${image} rm -rf build dist"
+            // Clean up the build artifacts inside the container
+            sh "docker run --rm -v ${volume} ${image} rm -rf /src/build /src/dist"
         }
     } catch (err) {
         currentBuild.result = 'UNSTABLE'
