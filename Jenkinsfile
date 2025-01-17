@@ -32,14 +32,17 @@ node {
     stage('Deliver') {
     docker.image('python:3.12-slim').inside {
         sh '''
-        # Upgrade pip and install to a custom directory
+        # Install required system packages
+        apt-get update && apt-get install -y binutils
+
+        # Upgrade pip and install PyInstaller to a custom directory
         python -m pip install --upgrade pip --no-cache-dir
         python -m pip install pyinstaller --no-cache-dir --prefix /tmp/pip-packages
 
-        # Add the custom path to PYTHONPATH
+        # Add custom directory to PYTHONPATH
         export PYTHONPATH=/tmp/pip-packages/lib/python3.12/site-packages:$PYTHONPATH
 
-        # Run PyInstaller
+        # Build the executable
         python -m PyInstaller --onefile sources/add2vals.py
         '''
     }
