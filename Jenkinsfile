@@ -23,14 +23,11 @@ node {
             }
         }
     } 
-    stage('Deliver') {
-    docker.image('cdrx/pyinstaller-linux:latest').inside {
-        sh '''
-        python -m pip install --upgrade pip --no-cache-dir
-        python -m PyInstaller --onefile sources/add2vals.py
-        '''
-    }
-}
 
+    stage('Deliver') {
+        docker.image('cdrx/pyinstaller-linux:latest').inside {
+            sh 'python -m PyInstaller --onefile sources/add2vals.py'
+        }
+    }
 }
 
