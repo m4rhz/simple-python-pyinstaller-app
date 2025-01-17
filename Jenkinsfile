@@ -1,17 +1,12 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:2-alpine'
-            args '-u root:root' // Run as root to ensure permissions
-        }
-    }
+    agent none
     stages {
-        stage('Clone Repository') { 
-            steps {
-                sh 'apk add --no-cache git && git clone -b master https://github.com/m4rhz/simple-python-pyinstaller-app .'
-            }
-        }
         stage('Build') {
+            agent {
+                docker {
+                    image 'python:2-alpine'
+                }
+            }
             steps {
                 sh 'python -m py_compile sources/add2vals.py sources/calc.py'
             }
@@ -19,11 +14,11 @@ pipeline {
         stage('Test') {
             agent {
                 docker {
-                    image 'python:2' // Switch to a more generic image
+                    image 'qnib/pytest'
                 }
             }
             steps {
-                sh 'pip install pytest && pytest --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
+                sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
             }
             post {
                 always {
