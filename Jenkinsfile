@@ -33,13 +33,13 @@ node {
     docker.image('python:3.12-slim').inside {
         sh '''
         # Upgrade pip to the latest version
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip --user
 
         # Install PyInstaller globally with root permissions
-        python -m pip install pyinstaller
+        python -m pip install pyinstaller --user
 
         # Build the executable
-        python -m PyInstaller --onefile sources/add2vals.py
+        python -m PyInstaller --onefile sources/add2vals.py --user
         '''
     }
 }
