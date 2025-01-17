@@ -1,7 +1,7 @@
 node {
     // Definisikan images yang akan digunakan
     def pythonImage = 'python:3.12-alpine'
-    def pytestImage = 'pytest:latest'
+    def pytestImage = 'qnib:pytest'
     def pyinstallerImage = 'cdrx/pyinstaller-linux:python3'
 
     stage('Clone') {
