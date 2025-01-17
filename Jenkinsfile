@@ -22,7 +22,7 @@ node {
     
     stage('Deliver') {
         // Using cdrx/pyinstaller-linux image which comes with PyInstaller pre-installed
-        docker.image('cdrx/pyinstaller-linux').inside {
+        docker.image('cdrx/pyinstaller-linux:latest').inside {
             try {
                 sh '''
                     python --version
