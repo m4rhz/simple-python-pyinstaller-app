@@ -14,7 +14,7 @@ node {
     
     stage('Test') {
         // Jalankan test dalam container pytest
-        docker.image(qnib/pytest).inside {
+        docker.image('qnib/pytest').inside {
             try {
                 sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
             } finally {
