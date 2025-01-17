@@ -27,7 +27,7 @@ node {
                 sh '''
                     python --version
                     ls -la sources/
-                    pyinstaller --onefile sources/add2vals.py
+                    python -m PyInstaller --onefile sources/add2vals.py
                     ls -la dist/
                 '''
                 
