@@ -1,9 +1,4 @@
 node {
-    // Definisikan images yang akan digunakan
-    def pythonImage = 'python:3-alpine'
-    def pytestImage = 'qnib/pytest'
-    // def pyinstallerImage = 'cdrx/pyinstaller-linux:python3'
-    
     stage('Clone') {
         // Langsung menggunakan git step
         git branch: 'master', 
@@ -12,14 +7,14 @@ node {
     
     stage('Build') {
         // Menggunakan docker.image().inside untuk menjalankan di container
-        docker.image(pythonImage).inside {
+        docker.image('python:2-alpine').inside {
             sh 'python -m py_compile sources/add2vals.py sources/calc.py'
         }
     }
     
     stage('Test') {
         // Jalankan test dalam container pytest
-        docker.image(pytestImage).inside {
+        docker.image(qnib/pytest).inside {
             try {
                 sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
             } finally {
@@ -29,7 +24,7 @@ node {
         }
     } 
     stage('Deliver') {
-    docker.image('cdrx/pyinstaller-linux:python3').inside {
+    docker.image('cdrx/pyinstaller-linux:latest').inside {
         sh '''
         python -m pip install --upgrade pip --no-cache-dir
         python -m PyInstaller --onefile sources/add2vals.py
