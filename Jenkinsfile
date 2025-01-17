@@ -5,7 +5,7 @@ node {
     def pyinstallerImage = 'cdrx/pyinstaller-linux:python3'
 
     stage('Clone') {
-        git branch: 'main', url: 'https://github.com/m4rhz/simple-python-pyinstaller-app'
+        git branch: 'master', url: 'https://github.com/m4rhz/simple-python-pyinstaller-app'
     }
 
     stage('Build') {
