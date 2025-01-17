@@ -23,21 +23,10 @@ node {
     stage('Deliver') {
         // Using cdrx/pyinstaller-linux image which comes with PyInstaller pre-installed
         docker.image('cdrx/pyinstaller-linux:latest').inside {
-            try {
-                sh '''
-                    python --version
-                    ls -la sources/
-                    python -m PyInstaller --onefile sources/add2vals.py
-                    ls -la dist/
-                '''
-                
-                if (currentBuild.currentResult == 'SUCCESS') {
-                    archiveArtifacts artifacts: 'dist/add2vals', fingerprint: true
-                }
-            } catch (Exception e) {
-                echo "Error in Deliver stage: ${e.message}"
-                currentBuild.result = 'FAILURE'
-                throw e
+            sh 'python -m PyInstaller --onefile sources/add2vals.py'
+
+            if (currentBuild.currentResult == 'SUCCESS') {
+                archiveArtifacts artifacts: 'dist/add2vals', fingerprint: true
             }
         }
     }
