@@ -32,7 +32,7 @@ node {
     stage('Deliver') {
         // Build executable dalam container pyinstaller
         docker.image(pyinstallerImage).inside {
-            sh 'Pyinstaller --onefile sources/add2vals.py'
+            sh 'PyInstaller --onefile sources/add2vals.py'
             
             // Post actions diimplementasikan dengan if condition
             if (currentBuild.currentResult == 'SUCCESS') {
