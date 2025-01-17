@@ -1,11 +1,11 @@
 node {
     // Define images with latest versions
-    def pythonImage = 'python:3-alpine'
+    def pythonImage = 'python:3.12-alpine'
     def pytestImage = 'pytest:latest'
     def pyinstallerImage = 'cdrx/pyinstaller-linux:python3'
 
     stage('Clone') {
-        git branch: 'master', url: 'https://github.com/m4rhz/simple-python-pyinstaller-app'
+        git branch: 'main', url: 'https://github.com/m4rhz/simple-python-pyinstaller-app'
     }
 
     stage('Build') {
