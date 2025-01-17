@@ -2,27 +2,28 @@ pipeline {
     agent {
         docker {
             image 'python:2-alpine'
+            args '-u root:root' // Run as root to ensure permissions
         }
     }
     stages {
-        stage('Melakukan Git Clone') { 
+        stage('Clone Repository') { 
             steps {
-                git branch: 'master', url: 'https://github.com/m4rhz/simple-python-pyinstaller-app'
+                sh 'apk add --no-cache git && git clone -b master https://github.com/m4rhz/simple-python-pyinstaller-app .'
             }
         }
-        stage('Melakukan Build') {
+        stage('Build') {
             steps {
                 sh 'python -m py_compile sources/add2vals.py sources/calc.py'
             }
         }
-        stage('Melakukan Test') {
+        stage('Test') {
             agent {
                 docker {
-                    image 'qnib/pytest'
+                    image 'python:2' // Switch to a more generic image
                 }
             }
             steps {
-                sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
+                sh 'pip install pytest && pytest --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
             }
             post {
                 always {
@@ -30,7 +31,7 @@ pipeline {
                 }
             }
         }
-        stage('Melakukan Deliver') {
+        stage('Deliver') {
             agent {
                 docker {
                     image 'cdrx/pyinstaller-linux:python2'
@@ -47,3 +48,4 @@ pipeline {
         }
     }
 }
+
