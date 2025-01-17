@@ -1,8 +1,8 @@
 node {
     // Definisikan images yang akan digunakan
-    def pythonImage = 'python:3-alpine'
+    def pythonImage = 'python:2-alpine'
     def pytestImage = 'qnib/pytest'
-    def pyinstallerImage = 'cdrx/pyinstaller-linux:python3'
+    def pyinstallerImage = 'cdrx/pyinstaller-linux:python2'
     
     stage('Clone') {
         // Langsung menggunakan git step
@@ -13,7 +13,7 @@ node {
     stage('Build') {
         // Menggunakan docker.image().inside untuk menjalankan di container
         docker.image(pythonImage).inside {
-            sh 'python3 -m py_compile sources/add2vals.py sources/calc.py'
+            sh 'python -m py_compile sources/add2vals.py sources/calc.py'
         }
     }
     
@@ -28,4 +28,16 @@ node {
             }
         }
     } 
+
+    stage('Deliver') {
+        // Build executable dalam container pyinstaller
+        docker.image(pyinstallerImage).inside {
+            sh 'Pyinstaller --onefile sources/add2vals.py'
+            
+            // Post actions diimplementasikan dengan if condition
+            if (currentBuild.currentResult == 'SUCCESS') {
+                archiveArtifacts artifacts: 'dist/add2vals', fingerprint: true
+            }
+        }
+    }
 }
