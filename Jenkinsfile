@@ -21,21 +21,11 @@ node {
     } 
     
     stage('Deliver') {
-        // Build executable dalam container python dengan pyinstaller
-        docker.image('python:3.9').inside {
+        // Using cdrx/pyinstaller-linux image which comes with PyInstaller pre-installed
+        docker.image('cdrx/pyinstaller-linux').inside {
             try {
                 sh '''
                     python --version
-                    # Create directory for pip cache and set permissions
-                    mkdir -p /tmp/pip-cache
-                    chmod 777 /tmp/pip-cache
-                    
-                    # Install pyinstaller with specific cache directory
-                    PIP_CACHE_DIR=/tmp/pip-cache pip install --user pyinstaller
-                    
-                    # Add local bin to PATH
-                    export PATH=$PATH:$HOME/.local/bin
-                    
                     ls -la sources/
                     pyinstaller --onefile sources/add2vals.py
                     ls -la dist/
