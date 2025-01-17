@@ -2,7 +2,7 @@ node {
     // Definisikan images yang akan digunakan
     def pythonImage = 'python:3-alpine'
     def pytestImage = 'qnib/pytest'
-    def pyinstallerImage = 'cdrx/pyinstaller-linux:python3'
+    // def pyinstallerImage = 'cdrx/pyinstaller-linux:python3'
     
     stage('Clone') {
         // Langsung menggunakan git step
@@ -31,9 +31,10 @@ node {
 
     stage('Deliver') {
         // Build executable dalam container pyinstaller
-        docker.image(pyinstallerImage).inside {
-            sh 'python -m PyInstaller --onefile sources/add2vals.py'
-        }
+        // docker.image(pyinstallerImage).inside {
+        sh 'pip install pyinstaller --break-system-packages'
+        sh 'python -m PyInstaller --onefile sources/add2vals.py'
+        // }
     }
 }
 
