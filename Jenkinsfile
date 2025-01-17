@@ -1,4 +1,4 @@
-inode {
+node {
     // Define images with latest versions
     def pythonImage = 'python:3-alpine'
     def pytestImage = 'pytest:latest'
