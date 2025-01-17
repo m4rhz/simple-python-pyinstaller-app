@@ -1,43 +1,53 @@
-node {
-    try {
+pipeline {
+    agent none
+    options {
+        skipStagesAfterUnstable()
+    }
+    stages {
         stage('Build') {
-            docker.image('python:2-alpine').inside {
+            agent {
+                docker {
+                    image 'python:2-alpine'
+                }
+            }
+            steps {
                 sh 'python -m py_compile sources/add2vals.py sources/calc.py'
-                stash name: 'compiled-results', includes: 'sources/*.py*'
+                stash(name: 'compiled-results', includes: 'sources/*.py*')
             }
         }
-
         stage('Test') {
-            docker.image('qnib/pytest').inside {
+            agent {
+                docker {
+                    image 'qnib/pytest'
+                }
+            }
+            steps {
                 sh 'py.test --junit-xml test-reports/results.xml sources/test_calc.py'
             }
-            junit 'test-reports/results.xml'
-        }
-
-        stage('Deliver') {
-            def workspace = sh(script: 'pwd', returnStdout: true).trim()
-            def volume = "${workspace}/sources:/src"
-            def image = 'cdrx/pyinstaller-linux:python2'
-            def buildDir = env.BUILD_ID
-
-            dir(buildDir) {
-                unstash 'compiled-results'
-
-                // Ensure `add2vals.py` exists in the sources directory
-                sh "ls -l ${workspace}/sources"
-
-                // Run PyInstaller
-                sh "docker run --rm -v ${volume} ${image} pyinstaller -F /src/add2vals.py"
+            post {
+                always {
+                    junit 'test-reports/results.xml'
+                }
             }
-
-            // Archive the artifact
-            archiveArtifacts artifacts: "${buildDir}/sources/dist/add2vals"
-
-            // Clean up the build artifacts inside the container
-            sh "docker run --rm -v ${volume} ${image} rm -rf /src/build /src/dist"
         }
-    } catch (err) {
-        currentBuild.result = 'UNSTABLE'
-        throw err
+        stage('Deliver') { 
+            agent any
+            environment { 
+                VOLUME = '$(pwd)/sources:/src'
+                IMAGE = 'cdrx/pyinstaller-linux:python2'
+            }
+            steps {
+                dir(path: env.BUILD_ID) { 
+                    unstash(name: 'compiled-results') 
+                    sh "docker run --rm -v ${VOLUME} ${IMAGE} 'pyinstaller -F add2vals.py'" 
+                }
+            }
+            post {
+                success {
+                    archiveArtifacts "${env.BUILD_ID}/sources/dist/add2vals" 
+                    sh "docker run --rm -v ${VOLUME} ${IMAGE} 'rm -rf build dist'"
+                }
+            }
+        }
     }
 }
