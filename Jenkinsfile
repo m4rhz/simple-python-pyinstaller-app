@@ -30,11 +30,12 @@ node {
     } 
 
     stage('Deliver') {
-        // Build executable dalam container pyinstaller
-        // docker.image(pyinstallerImage).inside {
-        sh 'pip install pyinstaller --break-system-packages'
-        sh 'python -m PyInstaller --onefile sources/add2vals.py'
-        // }
-    }
+      docker.image('python:3.12-slim').inside {
+          sh '''
+          pip install pyinstaller
+          python -m PyInstaller --onefile sources/add2vals.py
+          '''
+      }
+   } 
 }
 
