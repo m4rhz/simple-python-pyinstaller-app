@@ -1,16 +1,12 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:2-alpine'
-        }
-    }
+    agent none
     stages {
-        stage('Git Clone') { 
-            steps {
-                git branch: 'master', url: 'https://github.com/m4rhz/simple-python-pyinstaller-app'
-            }
-        }
         stage('Build') {
+            agent {
+                docker {
+                    image 'python:2-alpine'
+                }
+            }
             steps {
                 sh 'python -m py_compile sources/add2vals.py sources/calc.py'
             }
