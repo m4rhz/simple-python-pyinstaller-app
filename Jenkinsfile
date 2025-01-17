@@ -33,11 +33,6 @@ node {
         // Build executable dalam container pyinstaller
         docker.image(pyinstallerImage).inside {
             sh 'python -m PyInstaller --onefile sources/add2vals.py'
-            
-            // Post actions diimplementasikan dengan if condition
-            if (currentBuild.currentResult == 'SUCCESS') {
-                archiveArtifacts artifacts: 'dist/add2vals', fingerprint: true
-            }
         }
     }
 }
