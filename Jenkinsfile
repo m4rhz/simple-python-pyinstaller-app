@@ -28,21 +28,10 @@ node {
             }
         }
     } 
-
     stage('Deliver') {
-    docker.image('python:3.12-slim').inside {
+    docker.image('cdrx/pyinstaller-linux:python3').inside {
         sh '''
-        # Install required system packages
-        apt-get update && apt-get install -y binutils
-
-        # Upgrade pip and install PyInstaller to a custom directory
         python -m pip install --upgrade pip --no-cache-dir
-        python -m pip install pyinstaller --no-cache-dir --prefix /tmp/pip-packages
-
-        # Add custom directory to PYTHONPATH
-        export PYTHONPATH=/tmp/pip-packages/lib/python3.12/site-packages:$PYTHONPATH
-
-        # Build the executable
         python -m PyInstaller --onefile sources/add2vals.py
         '''
     }
