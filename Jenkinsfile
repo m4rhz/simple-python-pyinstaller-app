@@ -1,5 +1,4 @@
 node {
-    // Similar to skipStagesAfterUnstable
     def buildFailed = false
     
     try {
@@ -16,7 +15,6 @@ node {
                     try {
                         sh 'py.test --junit-xml test-reports/results.xml sources/test_calc.py'
                     } finally {
-                        // This is equivalent to post { always { ... } }
                         junit 'test-reports/results.xml'
                     }
                 }
@@ -25,20 +23,25 @@ node {
         
         if (!buildFailed) {
             stage('Deliver') {
-                // Define environment variables
-                def volume = "${pwd()}/sources:/src"
-                def image = 'cdrx/pyinstaller-linux:python2'
+                def buildDir = "${env.WORKSPACE}/${env.BUILD_ID}"
                 
-                // Create directory with BUILD_ID and unstash files
-                dir("${env.BUILD_ID}") {
+                // Create build directory and unstash files
+                dir(buildDir) {
                     unstash 'compiled-results'
                     
-                    // Run pyinstaller in container
+                    // Define the correct volume mapping
+                    def volume = "${buildDir}/sources:/src"
+                    def image = 'cdrx/pyinstaller-linux:python2'
+                    
+                    // Run pyinstaller
                     sh "docker run --rm -v ${volume} ${image} 'pyinstaller -F add2vals.py'"
                     
                     // Archive artifacts if successful
                     if (currentBuild.currentResult == 'SUCCESS') {
-                        archiveArtifacts "${env.BUILD_ID}/sources/dist/add2vals"
+                        // Look for artifacts in the correct path
+                        archiveArtifacts "sources/dist/add2vals"
+                        
+                        // Clean up
                         sh "docker run --rm -v ${volume} ${image} 'rm -rf build dist'"
                     }
                 }
