@@ -32,11 +32,24 @@ node {
     stage('Deliver') {
         // Build executable dalam container pyinstaller
         docker.image(pyinstallerImage).inside {
-            sh 'pyinstaller --onefile sources/add2vals.py'
-            
-            // Post actions diimplementasikan dengan if condition
-            if (currentBuild.currentResult == 'SUCCESS') {
-                archiveArtifacts artifacts: 'dist/add2vals', fingerprint: true
+            try {
+                // Add verbose output for debugging
+                sh '''
+                    python --version
+                    pip install pyinstaller
+                    ls -la sources/
+                    pyinstaller --onefile sources/add2vals.py
+                    ls -la dist/
+                '''
+                
+                // Post actions with error handling
+                if (currentBuild.currentResult == 'SUCCESS') {
+                    archiveArtifacts artifacts: 'dist/add2vals', fingerprint: true
+                }
+            } catch (Exception e) {
+                echo "Error in Deliver stage: ${e.message}"
+                currentBuild.result = 'FAILURE'
+                throw e
             }
         }
     }
