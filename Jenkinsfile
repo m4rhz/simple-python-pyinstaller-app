@@ -32,14 +32,15 @@ node {
     stage('Deliver') {
     docker.image('python:3.12-slim').inside {
         sh '''
-        # Upgrade pip to the latest version
-        python -m pip install --upgrade pip --user
+        # Upgrade pip and install to a custom directory
+        python -m pip install --upgrade pip --no-cache-dir
+        python -m pip install pyinstaller --no-cache-dir --prefix /tmp/pip-packages
 
-        # Install PyInstaller globally with root permissions
-        python -m pip install pyinstaller --user
+        # Add the custom path to PYTHONPATH
+        export PYTHONPATH=/tmp/pip-packages/lib/python3.12/site-packages:$PYTHONPATH
 
-        # Build the executable
-        python -m PyInstaller --onefile sources/add2vals.py --user
+        # Run PyInstaller
+        python -m PyInstaller --onefile sources/add2vals.py
         '''
     }
 }
