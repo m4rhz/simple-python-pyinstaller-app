@@ -1,53 +1,52 @@
-pipeline {
-    agent none
-    options {
-        skipStagesAfterUnstable()
-    }
-    stages {
+node {
+    // Similar to skipStagesAfterUnstable
+    def buildFailed = false
+    
+    try {
         stage('Build') {
-            agent {
-                docker {
-                    image 'python:2-alpine'
-                }
-            }
-            steps {
+            docker.image('python:2-alpine').inside {
                 sh 'python -m py_compile sources/add2vals.py sources/calc.py'
                 stash(name: 'compiled-results', includes: 'sources/*.py*')
             }
         }
-        stage('Test') {
-            agent {
-                docker {
-                    image 'qnib/pytest'
-                }
-            }
-            steps {
-                sh 'py.test --junit-xml test-reports/results.xml sources/test_calc.py'
-            }
-            post {
-                always {
-                    junit 'test-reports/results.xml'
-                }
-            }
-        }
-        stage('Deliver') { 
-            agent any
-            environment { 
-                VOLUME = '$(pwd)/sources:/src'
-                IMAGE = 'cdrx/pyinstaller-linux:python2'
-            }
-            steps {
-                dir(path: env.BUILD_ID) { 
-                    unstash(name: 'compiled-results') 
-                    sh "docker run --rm -v ${VOLUME} ${IMAGE} 'pyinstaller -F add2vals.py'" 
-                }
-            }
-            post {
-                success {
-                    archiveArtifacts "${env.BUILD_ID}/sources/dist/add2vals" 
-                    sh "docker run --rm -v ${VOLUME} ${IMAGE} 'rm -rf build dist'"
+        
+        if (!buildFailed) {
+            stage('Test') {
+                docker.image('qnib/pytest').inside {
+                    try {
+                        sh 'py.test --junit-xml test-reports/results.xml sources/test_calc.py'
+                    } finally {
+                        // This is equivalent to post { always { ... } }
+                        junit 'test-reports/results.xml'
+                    }
                 }
             }
         }
+        
+        if (!buildFailed) {
+            stage('Deliver') {
+                // Define environment variables
+                def volume = "${pwd()}/sources:/src"
+                def image = 'cdrx/pyinstaller-linux:python2'
+                
+                // Create directory with BUILD_ID and unstash files
+                dir("${env.BUILD_ID}") {
+                    unstash 'compiled-results'
+                    
+                    // Run pyinstaller in container
+                    sh "docker run --rm -v ${volume} ${image} 'pyinstaller -F add2vals.py'"
+                    
+                    // Archive artifacts if successful
+                    if (currentBuild.currentResult == 'SUCCESS') {
+                        archiveArtifacts "${env.BUILD_ID}/sources/dist/add2vals"
+                        sh "docker run --rm -v ${volume} ${image} 'rm -rf build dist'"
+                    }
+                }
+            }
+        }
+    } catch (Exception e) {
+        buildFailed = true
+        currentBuild.result = 'FAILURE'
+        throw e
     }
 }
