@@ -1,27 +1,36 @@
 node {
-    // Define images with latest versions
+    // Definisikan images yang akan digunakan
     def pythonImage = 'python:3.12-alpine'
     def pytestImage = 'pytest:latest'
     def pyinstallerImage = 'cdrx/pyinstaller-linux:python3'
 
     stage('Clone') {
-        git branch: 'main', url: 'https://github.com/m4rhz/simple-python-pyinstaller-app'
+        // Langsung menggunakan git step
+        git branch: 'master', 
+            url: 'https://github.com/m4rhz/simple-python-pyinstaller-app'
     }
 
     stage('Build') {
+        // Menggunakan docker.image().inside untuk menjalankan di container
         docker.image(pythonImage).inside {
             sh 'python -m py_compile sources/add2vals.py sources/calc.py'
         }
     }
 
     stage('Test') {
+        // Jalankan test dalam container pytest
         docker.image(pytestImage).inside {
-            sh 'pytest --verbose --junit-xml=test-reports/results.xml sources/test_calc.py'
-            junit 'test-reports/results.xml'
+            try {
+                sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
+            } finally {
+                // Post actions diimplementasikan dengan try-finally
+                junit 'test-reports/results.xml'
+            }
         }
-    }
+    } 
 
     stage('Deliver') {
+        // Build executable dalam container pyinstaller
         docker.image(pyinstallerImage).inside {
             sh 'python -m PyInstaller --onefile sources/add2vals.py'
         }
