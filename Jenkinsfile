@@ -32,8 +32,13 @@ node {
     stage('Deliver') {
     docker.image('python:3.12-slim').inside {
         sh '''
-        python -m pip install --user --upgrade pip
-        python -m pip install --user pyinstaller
+        # Upgrade pip to the latest version
+        python -m pip install --upgrade pip
+
+        # Install PyInstaller globally with root permissions
+        python -m pip install pyinstaller
+
+        # Build the executable
         python -m PyInstaller --onefile sources/add2vals.py
         '''
     }
