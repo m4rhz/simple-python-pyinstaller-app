@@ -22,7 +22,8 @@ node {
     
     stage('Deliver') {
         // Using cdrx/pyinstaller-linux image which comes with PyInstaller pre-installed
-        docker.image('cdrx/pyinstaller-linux:latest').inside {
+        docker.image().inside {
+            sh 'pip install pyinstaller --user'
             sh 'python -m PyInstaller --onefile sources/add2vals.py'
 
             if (currentBuild.currentResult == 'SUCCESS') {
