@@ -2,7 +2,18 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY sources/calc.py sources/add2vals.py ./
+# Install dependencies
+RUN pip install flask
 
-# Add a default command that provides some default arguments
-CMD ["python", "add2vals.py", "10", "20"]
+# Copy entire sources directory
+COPY sources/ .
+
+# Create templates directory and move HTML
+RUN mkdir -p templates
+RUN mv index.html templates/
+
+# Expose port
+EXPOSE 8000
+
+# Run the application
+CMD ["python", "web_app.py"]
