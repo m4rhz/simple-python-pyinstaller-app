@@ -2,13 +2,12 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Create a non-root user
-RUN pip install --user -r sources/requirements.txt
+RUN pip install flask
 
-COPY --chown=myuser:myuser . .
+COPY calc.py web_app.py index.html ./
+
+RUN pip install -r requirements.txt
 
 EXPOSE 8000
-
-RUN pip freeze > sources/requirements.txt
 
 CMD ["python", "web_app.py"]
