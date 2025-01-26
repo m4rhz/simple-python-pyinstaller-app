@@ -19,4 +19,4 @@ RUN pyinstaller --onefile sources/add2vals.py
 EXPOSE 8000
 
 # Set the CMD to run the generated executable
-CMD ["./dist/add2vals"]
+CMD ["./dist/add2vals", "3", "5"]
