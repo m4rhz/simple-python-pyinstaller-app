@@ -1,1 +1,1 @@
-web: gunicorn add2vals:app
+web: python sources/add2vals.py
