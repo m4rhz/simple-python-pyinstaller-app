@@ -2,18 +2,15 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install dependencies
-RUN pip install flask
+# Create a non-root user
+RUN useradd -m myuser
+USER myuser
 
-# Copy entire sources directory
-COPY sources/ .
+COPY --chown=myuser:myuser requirements.txt .
+RUN pip install --user -r requirements.txt
 
-# Create templates directory and move HTML
-RUN mkdir -p templates
-RUN mv index.html templates/
+COPY --chown=myuser:myuser . .
 
-# Expose port
 EXPOSE 8000
 
-# Run the application
 CMD ["python", "web_app.py"]
