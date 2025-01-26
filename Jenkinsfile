@@ -3,8 +3,9 @@ node {
     
     try {
         stage('Build') {
-            docker.image('python:2-alpine').inside {
-                sh 'python -m py_compile sources/add2vals.py sources/calc.py'
+            docker.image('python:3.9-slim').inside {
+                sh 'pip install -r sources/requirements.txt'
+                sh 'python -m py_compile sources/calc.py sources/web_app.py'
                 stash(name: 'compiled-results', includes: 'sources/*.py*')
             }
         }
@@ -22,28 +23,28 @@ node {
         }
         
         if (!buildFailed) {
+            stage('Manual Approval') {
+                input message: 'Lanjutkan ke tahap Deploy?', ok: 'Proceed'
+            }
+        }
+        
+        if (!buildFailed) {
             stage('Deploy') {
                 def buildDir = "${env.WORKSPACE}/${env.BUILD_ID}"
                 
-                // Create build directory and unstash files
                 dir(buildDir) {
                     unstash 'compiled-results'
                     
-                    // Define the correct volume mapping
-                    def volume = "${buildDir}/sources:/src"
-                    def image = 'cdrx/pyinstaller-linux:python2'
+                    docker.build('web-calculator', './sources')
                     
-                    // Run pyinstaller
-                    sh "docker run --rm -v ${volume} ${image} 'pyinstaller -F add2vals.py'"
-                    
-                    // Archive artifacts if successful
-                    if (currentBuild.currentResult == 'SUCCESS') {
-                        // Look for artifacts in the correct path
-                        archiveArtifacts "sources/dist/add2vals"
-                        
-                        // Clean up
-                        sh "docker run --rm -v ${volume} ${image} 'rm -rf build dist'"
-                    }
+                    sh '''
+                        docker run -d --name web-app -p 8000:8000 web-calculator
+                        sleep 60
+                        docker stop web-app
+                        docker rm web-app
+                    '''
+
+                    archiveArtifacts 'sources/*.py'
                 }
             }
         }
