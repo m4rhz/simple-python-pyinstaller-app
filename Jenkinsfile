@@ -3,10 +3,8 @@ node {
     
     try {
         stage('Build') {
-            docker.image('python:3.9-slim').inside('-u root') {
-                sh 'pip install flask'
-                sh 'ls sources'
-                sh 'python -m py_compile sources/calc.py sources/web_app.py'
+            docker.image('python:3.9-slim').inside {
+                sh 'python -m py_compile sources/add2vals.py sources/calc.py'
                 stash(name: 'compiled-results', includes: 'sources/*.py*')
             }
         }
