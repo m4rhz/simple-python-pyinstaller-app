@@ -5,6 +5,7 @@ node {
         stage('Build') {
             docker.image('python:3.9-slim').inside('-u root') {
                 sh 'pip install flask'
+                sh 'ls sources'
                 sh 'python -m py_compile sources/calc.py sources/web_app.py'
                 stash(name: 'compiled-results', includes: 'sources/*.py*')
             }
