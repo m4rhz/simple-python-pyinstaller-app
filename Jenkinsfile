@@ -3,10 +3,8 @@ node {
     
     try {
         stage('Build') {
-            docker.image('python:3.9-slim').inside('-u root') {
-                sh 'pip install flask'
-                sh 'ls -l sources'
-                sh 'python -m py_compile sources/add2vals.py sources/web_app.py'
+            docker.image('python:2-alpine').inside {
+                sh 'python -m py_compile sources/add2vals.py sources/calc.py'
                 stash(name: 'compiled-results', includes: 'sources/*.py*')
             }
         }
@@ -24,31 +22,29 @@ node {
         }
         
         if (!buildFailed) {
-            stage('Manual Approval') {
-                input message: 'Lanjutkan ke tahap Deploy?', ok: 'Proceed'
-            }
-        }
-        
-        if (!buildFailed) {
-            stage('Deploy') {
+            stage('Deliver') {
                 def buildDir = "${env.WORKSPACE}/${env.BUILD_ID}"
                 
+                // Create build directory and unstash files
                 dir(buildDir) {
                     unstash 'compiled-results'
                     
-                    // Build Docker image
-                    sh 'docker build -t web-calculator -f Dockerfile .'
+                    // Define the correct volume mapping
+                    def volume = "${buildDir}/sources:/src"
+                    def image = 'cdrx/pyinstaller-linux:python2'
                     
-                    // Run application for 1 minute
-                    sh '''
-                        docker run -d --name web-app -p 8000:8000 web-calculator
-                        sleep 60
-                        docker stop web-app
-                        docker rm web-app
-                    '''
+                    // Run pyinstaller
+                    sh "docker run --rm -v ${volume} ${image} 'pyinstaller -F add2vals.py'"
+                    sleep 60
                     
-                    // Archive artifacts
-                    archiveArtifacts 'sources/*.py'
+                    // Archive artifacts if successful
+                    if (currentBuild.currentResult == 'SUCCESS') {
+                        // Look for artifacts in the correct path
+                        archiveArtifacts "sources/dist/add2vals"
+                        
+                        // Clean up
+                        sh "docker run --rm -v ${volume} ${image} 'rm -rf build dist'"
+                    }
                 }
             }
         }
