@@ -34,20 +34,8 @@ node {
                 dir("${env.WORKSPACE}/${env.BUILD_ID}") {
                     unstash 'compiled-results'
                     sh '''
-                        echo 'FROM python:3.9-slim
-                        WORKDIR /app
-                        COPY ./sources/calc.py .
-                        COPY ./sources/add2vals.py .
-                        COPY ./sources/index.html .
-                        COPY ./sources/web_app.py .
-                        RUN pip install flask
-                        EXPOSE 8000
-                        CMD ["python", "web_app.py"]' > Dockerfile
-                        docker build -t web-calculator .
-                        docker run -d --name web-app -p 8000:8000 web-calculator
-                        sleep 60
-                        docker stop web-app
-                        docker rm web-app
+                        ls -la sources/
+                        pwd
                     '''
                 }
             }
