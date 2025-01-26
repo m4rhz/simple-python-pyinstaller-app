@@ -34,12 +34,8 @@ node {
                 dir("${env.WORKSPACE}/${env.BUILD_ID}") {
                     unstash 'compiled-results'
                     sh '''
-                        cp ${WORKSPACE}/Dockerfile .
-                        docker build -t web-calculator .
-                        docker run -d --name web-app -p 8000:8000 web-calculator
-                        sleep 60
-                        docker stop web-app
-                        docker rm web-app
+                        find ${WORKSPACE} -name Dockerfile
+                        ls -la ${WORKSPACE}
                     '''
                 }
             }
