@@ -37,7 +37,7 @@ node {
                     unstash 'compiled-results'
                     
                     // Build Docker image
-                    docker.build('web-calculator', './')
+                    sh 'docker build -t web-calculator -f sources/Dockerfile ./sources'
                     
                     // Run application for 1 minute
                     sh '''
