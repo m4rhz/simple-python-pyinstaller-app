@@ -2,10 +2,19 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-RUN pip install flask
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY calc.py web_app.py index.html ./
+# Copy all source files
+COPY sources/ .
 
+# Install Flask
+RUN pip install --no-cache-dir flask
+
+# Expose port
 EXPOSE 8000
 
+# Run the application
 CMD ["python", "web_app.py"]
