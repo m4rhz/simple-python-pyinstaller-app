@@ -31,22 +31,18 @@ node {
         
         if (!buildFailed) {
             stage('Deploy') {
-    def buildDir = "${env.WORKSPACE}/${env.BUILD_ID}"
-    
-    dir(buildDir) {
-        unstash 'compiled-results'
-        sh 'pwd && ls -la'  // Debug: check current directory
-        sh 'pwd && ls -la ..' // Debug: check parent directory
-        sh 'docker build -t web-calculator -f ${WORKSPACE}/Dockerfile .'
-        
-        sh '''
-            docker run -d --name web-app -p 8000:8000 web-calculator
-            sleep 60
-            docker stop web-app
-            docker rm web-app
-        '''
-    }
-}
+                dir("${env.WORKSPACE}/${env.BUILD_ID}") {
+                    unstash 'compiled-results'
+                    sh '''
+                        cp ${WORKSPACE}/Dockerfile .
+                        docker build -t web-calculator .
+                        docker run -d --name web-app -p 8000:8000 web-calculator
+                        sleep 60
+                        docker stop web-app
+                        docker rm web-app
+                    '''
+                }
+            }
         }
     } catch (Exception e) {
         buildFailed = true
