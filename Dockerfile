@@ -13,4 +13,6 @@ COPY --chown=myuser:myuser . .
 
 EXPOSE 8000
 
+RUN pip freeze > requirements.txt
+
 CMD ["python", "web_app.py"]
