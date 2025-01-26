@@ -1,6 +1,6 @@
 node {
     def buildFailed = false
-    
+
     try {
         stage('Build') {
             docker.image('python:2-alpine').inside {
@@ -8,7 +8,7 @@ node {
                 stash(name: 'compiled-results', includes: 'sources/*.py*')
             }
         }
-        
+
         if (!buildFailed) {
             stage('Test') {
                 docker.image('qnib/pytest').inside {
@@ -20,28 +20,32 @@ node {
                 }
             }
         }
-        
+
         if (!buildFailed) {
+            stage('Manual Approval') {
+                input message: 'Lanjutkan ke tahap Deploy?', ok: 'Proceed', submitter: 'admin'
+            }
+
             stage('Deliver') {
                 def buildDir = "${env.WORKSPACE}/${env.BUILD_ID}"
-                
+
                 // Create build directory and unstash files
                 dir(buildDir) {
                     unstash 'compiled-results'
-                    
+
                     // Define the correct volume mapping
                     def volume = "${buildDir}/sources:/src"
                     def image = 'cdrx/pyinstaller-linux:python2'
-                    
+
                     // Run pyinstaller
                     sh "docker run --rm -v ${volume} ${image} 'pyinstaller -F add2vals.py'"
                     sleep 60
-                    
+
                     // Archive artifacts if successful
                     if (currentBuild.currentResult == 'SUCCESS') {
                         // Look for artifacts in the correct path
                         archiveArtifacts "sources/dist/add2vals"
-                        
+
                         // Clean up
                         sh "docker run --rm -v ${volume} ${image} 'rm -rf build dist'"
                     }
