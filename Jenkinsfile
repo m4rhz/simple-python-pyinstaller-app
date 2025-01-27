@@ -26,7 +26,7 @@ node {
                 input message: 'Lanjutkan ke tahap Deploy?', ok: 'Proceed', submitter: 'admin'
             }
 
-            stage('Deliver') {
+            stage('Deploy') {
                 def buildDir = "${env.WORKSPACE}/${env.BUILD_ID}"
 
                 // Create build directory and unstash files
